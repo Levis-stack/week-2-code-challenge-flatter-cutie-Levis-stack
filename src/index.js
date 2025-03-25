@@ -66,5 +66,19 @@ document.getElementById('detailed-info').addEventListener('click', event => {
     }
 });
 }
-
 addVoteFunctionality();
+
+function updateVotes(characterId) {
+    fetch(`http://localhost:3000/characters/${characterId.id}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(characterId)
+    })
+    .then(res => res.json())
+    .then(data => console.log(data))
+    .catch(error => console.error("Error updating votes:", error));
+}
+updateVotes();
