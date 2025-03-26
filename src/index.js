@@ -1,5 +1,7 @@
+const API = 'http://localhost:3000/characters';
+
 function characterNames() {
-    fetch('http://localhost:3000/characters')
+    fetch(API)
     .then(res => res.json())
     .then(data => {
         console.log(data);
@@ -17,6 +19,7 @@ function displayCharacterNames(characters) {
         span.innerText = character.name;  
         span.style.cursor = "pointer";  
         characterList.appendChild(span);
+        
     });
 }
 
@@ -36,19 +39,19 @@ function displayCharacterDetails(character) {
     detailDiv.innerHTML = `
         <h2>${character.name}</h2>
         <img src="${character.image}" alt="${character.name}" width="300px"/>
-        <h4>Total Votes: <span id="vote-count">0</span></h4>
+        <h4>Total Votes: <span id="vote-count">${character.votes || 0}</span></h4>
         <form id="votes-form">
           <input type="text" placeholder="Enter Votes" id="votes" name="votes" />
           <input type="submit" value="Add Votes" />
         </form>
         <button id="reset-btn">Reset Votes</button>
     `;
+
+    addVoteFunctionality(character);
 }
 
-characterNames();  
-
-function addVoteFunctionality() {
-    document.getElementById('detailed-info').addEventListener('submit', event => {
+function addVoteFunctionality(character) {
+    document.getElementById('votes-form').addEventListener('submit', event => {
         event.preventDefault();
         let voteCountElement = document.getElementById('vote-count');
         let votesInput = document.getElementById('votes');
@@ -56,29 +59,36 @@ function addVoteFunctionality() {
         if (!isNaN(newVotes)) {
             let currentVotes = parseInt(voteCountElement.innerText);
             voteCountElement.innerText = currentVotes + newVotes;
+            character.votes = currentVotes + newVotes;
+            updateVotes(character);
         }
-        votesInput.value = '';
+        
     });
 
-document.getElementById('detailed-info').addEventListener('click', event => {
-    if (event.target.id === 'reset-btn') {
-        document.getElementById('vote-count').innerText = '0';
-    }
-});
-}
-addVoteFunctionality();
+    document.getElementById('detailed-info').addEventListener('click', event => {
+        if (event.target.id === 'reset-btn') {
+            document.getElementById('vote-count').innerText = '0';
+            character.votes = 0;
 
-function updateVotes(characterId) {
-    fetch(`http://localhost:3000/characters/${characterId.id}`, {
+            updateVotes(character);
+        }
+    });
+}
+
+function updateVotes(character) {
+    fetch(`${API}/${character.id}`, { 
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
-        body: JSON.stringify(characterId)
+        body: JSON.stringify({
+            votes: character.votes 
+        })
     })
     .then(res => res.json())
-    .then(data => console.log(data))
+    .then(data => console.log('Updated character votes:', data))
     .catch(error => console.error("Error updating votes:", error));
 }
-updateVotes();
+
+characterNames();
